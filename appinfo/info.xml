@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<info>
+	<id>autorename</id>
+	<name>Auto rename</name>
+	<description>Allow renaming files based on metadata, eg. image exif date.</description>
+	<version>0.0.2</version>
+	<licence>agpl</licence>
+	<author>Jörn Friedrich Dreyer</author>
+	<dependencies>
+		<owncloud min-version="8.2" max-version="9.1" />
+		<php min-version="5.4" />
+	</dependencies>
+</info>
