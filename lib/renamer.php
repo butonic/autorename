@@ -25,7 +25,7 @@ class Renamer {
 		return false;
 	}
 
-	public function extractRawTimestamp(File $file) {
+	public function extractRawTimestampFromMetadata(File $file) {
 		// getid3 needs a local file
 		$tmp = \OC::$server->getTempManager()->getTemporaryFile();
 		$h = fopen($tmp, 'w+');
@@ -64,6 +64,9 @@ class Renamer {
 				}
 			}
 		}
+		if (empty($time)) {
+			throw new \Exception('Time not found in '.print_r($tags, true));
+		}
 		return $time;
 	}
 
@@ -78,11 +81,12 @@ class Renamer {
 	public function autorenameFile(File $sourceFile, Folder $targetFolder, $dryRun = false, OutputInterface $output = null) {
 		if ($this->isAnalyzable($sourceFile)) {
 			/** @var File $node */
-			$rawTime = $this->extractRawTimestamp($sourceFile);
-			if (empty($rawTime)) {
+			try {
+				$rawTime = $this->extractRawTimestampFromMetadata($sourceFile);
+			} catch (\Exception $e) {
 				// TODO try regex on the filename, eg IMG_(yyyymmdd-hhmmss)
 				if ($output) {
-					$output->writeln("<warn>could not analyze {$sourceFile->getPath()}</warn>");
+					$output->writeln("<warn>{$sourceFile->getPath()}: {$e->getMessage()}</warn>");
 				}
 				return false;
 			}
