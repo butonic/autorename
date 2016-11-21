@@ -94,7 +94,9 @@ class Renamer {
 			$dateTime = $this->parseDate($rawTime);
 			// build new filename
 			$newName = $dateTime->format('Ymd_His_').$sourceFile->getName();
-			$newPath = $targetFolder->getPath().'/'.$newName;
+			$subFolder = $dateTime->format('/Y/Y-m/');
+			// TODO mkdir -p
+			$newPath = $targetFolder->getPath().$subFolder.$newName;
 			// write new name to output
 			if ($output) {
 				$output->writeln("<info>moving {$sourceFile->getPath()} to $newPath</info>");
