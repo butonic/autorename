@@ -92,19 +92,26 @@ class Renamer {
 			}
 			// try parsing with datetime
 			$dateTime = $this->parseDate($rawTime);
-			// build new filename
-			$newName = $dateTime->format('Ymd_His_').$sourceFile->getName();
-			$subFolder = $dateTime->format('/Y/Y-m/');
-			// TODO mkdir -p
-			$newPath = $targetFolder->getPath().$subFolder.$newName;
-			// write new name to output
-			if ($output) {
-				$output->writeln("<info>moving {$sourceFile->getPath()} to $newPath</info>");
+			if ($dateTime) {
+				// build new filename
+				$newName = $dateTime->format('Ymd_His_').$sourceFile->getName();
+				$subFolder = $dateTime->format('/Y/Y-m/');
+				// TODO mkdir -p
+				$newPath = $targetFolder->getPath().$subFolder.$newName;
+				// write new name to output
+				if ($output) {
+					$output->writeln("<info>moving {$sourceFile->getPath()} to $newPath</info>");
+				}
+				// TODO if target exists don't overwrite but append number
+				if ($dryRun === false) {
+					$sourceFile->move($newPath);
+				}
+			} else {
+				if ($output) {
+					$output->writeln("<error>{$sourceFile->getPath()}: could not create DateTime from $rawTime, skipping</error>");
+				}
 			}
-			// TODO if target exists don't overwrite but append number
-			if ($dryRun === false) {
-				$sourceFile->move($newPath);
-			}
+
 		} else if ($output) {
 			$output->writeln("<debug>skipping {$sourceFile->getPath()}</debug>");
 		}
