@@ -1,0 +1,21 @@
+{
+	"name": "butonic/autorename",
+	"license": "AGPL",
+	"authors": [
+		{
+			"name": "Jörn Friedrich Dreyer",
+			"email": "jfd@butonic.de",
+			"role": "Developer",
+			"homepage": "http://www.butonic.de"
+		}
+	],
+	"config": {
+		"vendor-dir": "3rdparty"
+	},
+	"support": {
+		"issues": "https://github.com/butonic/autorename/issues"
+	},
+	"require": {
+		"james-heinrich/getid3": "v1.9.12"
+	}
+}

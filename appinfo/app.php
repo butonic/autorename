@@ -8,3 +8,7 @@
  * @author Jörn Friedrich Dreyer <jfd@butonic.de>
  * @copyright Jörn Friedrich Dreyer 2016
  */
+
+
+//add 3rdparty composer autoloader
+require_once __DIR__ . '/../3rdparty/autoload.php';
