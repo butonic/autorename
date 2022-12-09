@@ -19,7 +19,7 @@ class Renamer {
 
 	public function isAnalyzable(File $node) {
 		$ext = strtolower(pathinfo($node->getName(), PATHINFO_EXTENSION));
-		if (in_array($ext, ['jpg', 'jpeg', 'mp4', 'mov', 'mpeg', 'ts'])) {
+		if (in_array($ext, ['jpg', 'jpeg', 'mp4', 'mov', 'mpeg', 'ts', '3gp'])) {
 			return true;
 		}
 		return false;
@@ -83,16 +83,64 @@ class Renamer {
 			/** @var File $node */
 			try {
 				$rawTime = $this->extractRawTimestampFromMetadata($sourceFile);
+				// try parsing with datetime
+				$dateTime = $this->parseDate($rawTime);
 			} catch (\Exception $e) {
-				// TODO try regex on the filename, eg IMG_(yyyymmdd-hhmmss)
-				if ($output) {
-					$output->writeln("<warn>{$sourceFile->getPath()}: {$e->getMessage()}</warn>");
-				}
-				return false;
+				// fall back to parsing the filename
+				$dateTime = false;
 			}
-			// try parsing with datetime
-			$dateTime = $this->parseDate($rawTime);
-			if ($dateTime) {
+			
+			if ($dateTime === false) {
+				// Whatsapp images: IMG-20220930-WA0014.jpg we replace the WE with 12 so the images get ordered roughly at 12h
+				$rawTime = preg_replace("/IMG-(\d{8})-WA(\d\d)(\d)(\d).*\.jpg/", "$1 $2:0$3:0$4", $sourceFile->getName());
+				if ($rawTime !== $sourceFile->getName()) {
+					if ($output) {
+						$output->writeln("<info>detected whatsapp image {$sourceFile->getName()}, trying to parse $rawTime as 'Ymd H:i:s'</info>");
+					}
+					$dateTime = \DateTimeImmutable::createFromFormat('Ymd H:i:s', $rawTime);
+					if ($dateTime === false && $output) {
+						$output->writeln("<error>failed to parse $rawTime as whatsapp image</error>");
+					}
+				}
+			}
+			if ($dateTime === false) {
+				// unix timestamp, eg. 1652562090760.jpg
+				$rawTime = preg_replace("/(\d{10})(\d{3})\..*/", "$1.$2", $sourceFile->getName());
+				if ($rawTime !== $sourceFile->getName()) {
+					if ($output) {
+						$output->writeln("<info>detected unixtime filename {$sourceFile->getName()}, trying to parse $rawTime as 'U.u'</info>");
+					}
+					$dateTime = \DateTimeImmutable::createFromFormat('U.u', $rawTime);
+				}
+			}
+
+			if ($dateTime === false) {
+				// other crap
+				$rawTime = preg_replace("/.*IMG_(\d{8})_(\d{6}).*/", "$1 $2", $sourceFile->getName());
+				if ($rawTime !== $sourceFile->getName()) {
+					if ($output) {
+						$output->writeln("<info>detected IMG filename {$sourceFile->getName()}, trying to parse $rawTime as 'Ymd His'</info>");
+					}
+					$dateTime = \DateTimeImmutable::createFromFormat('Ymd His', $rawTime);
+				}
+			}
+
+			if ($dateTime === false) {
+				// other crap
+				$rawTime = preg_replace("/.*image-(\d{8})-(\d{6}).*/", "$1 $2", $sourceFile->getName());
+				if ($rawTime !== $sourceFile->getName()) {
+					if ($output) {
+						$output->writeln("<info>detected image filename {$sourceFile->getName()}, trying to parse $rawTime as 'Ydm His'</info>");
+					}
+					$dateTime = \DateTimeImmutable::createFromFormat('Ydm His', $rawTime);
+				}
+			}
+
+			if ($dateTime === false) {
+				if ($output) {
+					$output->writeln("<error>{$sourceFile->getPath()}: could not create DateTime from $rawTime, skipping</error>");
+				}
+			} else {
 				// build new filename
 				$newName = $dateTime->format('Ymd_His_').$sourceFile->getName();
 				$subFolder = $dateTime->format('/Y/Y-m/');
@@ -105,10 +153,6 @@ class Renamer {
 				// TODO if target exists don't overwrite but append number
 				if ($dryRun === false) {
 					$sourceFile->move($newPath);
-				}
-			} else {
-				if ($output) {
-					$output->writeln("<error>{$sourceFile->getPath()}: could not create DateTime from $rawTime, skipping</error>");
 				}
 			}
 
