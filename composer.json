@@ -16,6 +16,6 @@
 		"issues": "https://github.com/butonic/autorename/issues"
 	},
 	"require": {
-		"james-heinrich/getid3": "v1.9.12"
+		"james-heinrich/getid3": "v1.9.22"
 	}
 }

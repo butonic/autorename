@@ -1,6 +1,6 @@
 getID3() by James Heinrich (<info@getid3.org>)
 ===
-**Available at <http://getid3.sourceforge.net> or <http://www.getid3.org>**
+**Available at <http://getid3.sourceforge.net> or <https://www.getid3.org>**
 
 getID3() is released under multiple licenses. You may choose from the following licenses, and use getID3 according to the terms of the license most suitable to your project.
 
@@ -18,17 +18,17 @@ getID3() is released under multiple licenses. You may choose from the following 
 
 **Mozilla MPL:**
 
-* [v2](http://www.mozilla.org/MPL/2.0/)
+* [v2](https://www.mozilla.org/MPL/2.0/)
 
 **getID3 Commercial License:**
 
-* [gCL](http://getid3.org/#gCL) (payment required)
+* [gCL](https://www.getid3.org/#gCL) (payment required)
 
 * * *
 Copies of each of the above licenses are included in the `licenses/`
 directory of the getID3 distribution.
 
-If you want to donate, there is a link on <http://www.getid3.org> for PayPal donations.
+If you want to donate, there is a link on <https://www.getid3.org> for PayPal donations.
 
 
 
@@ -100,6 +100,7 @@ Reads & parses (to varying degrees):
   * OptimFROG
   * RKAU
   * Shorten
+  * Tom's lossless Audio Kompressor (TAK)
   * TTA
   * VOC
   * WAV (RIFF)
@@ -151,7 +152,15 @@ Requirements
 * at least 4MB memory for PHP. 8MB or more is highly recommended.
   12MB is required with all modules loaded.
 
+Installation
+===
+The preferred method is via [composer](https://getcomposer.org/). Follow the installation [instructions](https://getcomposer.org/doc/00-intro.md) if you do not already have composer installed.
 
+Once composer is installed, execute the following command in your project root to install this library:
+
+```
+composer require james-heinrich/getid3
+```
 
 Usage
 ===
@@ -294,7 +303,7 @@ function getID3($filename) { return unpack('a3TAG/a30title/a30artist/a30album/a4
 
 Future Plans
 ===
-<http://www.getid3.org/phpBB3/viewforum.php?f=7>
+<https://www.getid3.org/phpBB3/viewforum.php?f=7>
 
 * Better support for MP4 container format
 * Scan for appended ID3v2 tag at end of file per ID3v2.4 specs (Section 5.0)
@@ -336,11 +345,11 @@ Future Plans
 * Optional scan-through-frames for AVI verification
   (thanks rockcohenØmassive-interactive*nl)
 * Support for TTF (thanks infoØbutterflyx*com)
-* Support for DSS (http://www.getid3.org/phpBB3/viewtopic.php?t=171)
+* Support for DSS (https://www.getid3.org/phpBB3/viewtopic.php?t=171)
 * Support for SMAF (http://smaf-yamaha.com/what/demo.html)
-  http://www.getid3.org/phpBB3/viewtopic.php?t=182
-* Support for AMR (http://www.getid3.org/phpBB3/viewtopic.php?t=195)
-* Support for 3gpp (http://www.getid3.org/phpBB3/viewtopic.php?t=195)
+  https://www.getid3.org/phpBB3/viewtopic.php?t=182
+* Support for AMR (https://www.getid3.org/phpBB3/viewtopic.php?t=195)
+* Support for 3gpp (https://www.getid3.org/phpBB3/viewtopic.php?t=195)
 * Support for ID4 (http://www.wackysoft.cjb.net grizlyY2KØhotmail*com)
 * Parse XML data returned in Ogg comments
 * Parse XML data from Quicktime SMIL metafiles (klausrathØmac*com)
@@ -376,7 +385,7 @@ Future Plans
 
 Known Bugs/Issues in getID3() that may be fixed eventually
 ===
-<http://www.getid3.org/phpBB3/viewtopic.php?t=25>
+<https://www.getid3.org/phpBB3/viewtopic.php?t=25>
 
 * Cannot determine bitrate for MPEG video with VBR video data
   (need documentation)
@@ -402,7 +411,7 @@ Known Bugs/Issues in getID3() that may be fixed eventually
 
 Known Bugs/Issues in getID3() that cannot be fixed
 ---
-<http://www.getid3.org/phpBB3/viewtopic.php?t=25>
+<https://www.getid3.org/phpBB3/viewtopic.php?t=25>
 
 * 32-bit PHP installations only:
   Files larger than 2GB cannot always be parsed fully by getID3()
@@ -432,7 +441,7 @@ Known Bugs/Issues in getID3() that cannot be fixed
 
 Known Bugs/Issues in other programs
 ---
-<http://www.getid3.org/phpBB3/viewtopic.php?t=25>
+<https://www.getid3.org/phpBB3/viewtopic.php?t=25>
 
 * Windows Media Player (up to v11) and iTunes (up to v10+) do
     not correctly handle ID3v2.3 tags with UTF-16BE+BOM
@@ -605,3 +614,4 @@ Reference material:
 * http://trac.musepack.net/trac/wiki/SV8Specification
 * http://wyday.com/cuesharp/specification.php
 * http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/Nikon.html
+* http://wiki.hydrogenaud.io/index.php?title=TAK
