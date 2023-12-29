@@ -35,6 +35,8 @@ class Renamer {
 
 		$getID3 = new \getID3();
 		$tags = $getID3->analyze($tmp);
+
+		//print_r($tags);
 		//\getid3_lib::CopyTagsToComments($tags);
 		$time = null;
 		// TODO use heuristic to collect timestamps:
@@ -44,30 +46,75 @@ class Renamer {
 		//
 		if (isset($tags['xmp']['xmp']['CreateDate'])) {
 			$time = $tags['xmp']['xmp']['CreateDate']; // 2016-06-19T19:19:10.88
-		} else if (isset($tags['xmp']['photoshop']['DateCreated'])) {
+			if (!empty($time)) {
+				return $time;
+			}
+		} 
+		if (isset($tags['xmp']['photoshop']['DateCreated'])) {
 			$time = $tags['xmp']['photoshop']['DateCreated']; // 2016-06-19T19:19:10.88
-		} else if (isset($tags['jpg']['exif']['EXIF']['DateTimeOriginal'])) {
+			if (!empty($time)) {
+				return $time;
+			}
+		}
+		if (isset($tags['jpg']['exif']['EXIF']['DateTimeOriginal'])) {
 			$time = $tags['jpg']['exif']['EXIF']['DateTimeOriginal']; // 2016:06:19 19:19:10
 			$time = preg_replace('/(\d\d\d\d):(\d\d):(\d\d) (\d\d):(\d\d):(\d\d)/','$1-$2-$3T$4:$5:$6', $time);
 			if (isset($tags['jpg']['exif']['EXIF']['SubSecTimeOriginal'])) {
 				$time .= '.'.$tags['jpg']['exif']['EXIF']['SubSecTimeOriginal']; // 88
 			}
-		} else if (isset($tags['quicktime']['moov']['subatoms'])) {
+			if (!empty($time)) {
+				return $time;
+			}
+		}
+		if (isset($tags['quicktime']['timestamps_unix']['create']['moov mvhd'])) {
+			$time = $tags['quicktime']['timestamps_unix']['create']['moov mvhd']; // 1676208759
+			if ($time > -1) {
+				return $time;
+			}
+		} 
+		if (isset($tags['quicktime']['timestamps_unix']['create']['moov trak tkhd'])) {
+			$time = $tags['quicktime']['timestamps_unix']['create']['moov trak tkhd']; // 1676208759
+			if ($time > -1) {
+				return $time;
+			}
+		} 
+		if (isset($tags['quicktime']['timestamps_unix']['create']['moov trak mdia mdhd'])) {
+			$time = $tags['quicktime']['timestamps_unix']['create']['moov trak mdia mdhd']; // 1676208759
+			if ($time > -1) {
+				return $time;
+			}
+		} 
+		if (isset($tags['quicktime']['timestamps_unix']['modify']['moov mvhd'])) {
+			$time = $tags['quicktime']['timestamps_unix']['modify']['moov mvhd']; // 1676208759
+			if ($time > -1) {
+				return $time;
+			}
+		} 
+		if (isset($tags['quicktime']['timestamps_unix']['modify']['moov trak tkhd'])) {
+			$time = $tags['quicktime']['timestamps_unix']['modify']['moov trak tkhd']; // 1676208759
+			if ($time > -1) {
+				return $time;
+			}
+		} 
+		if (isset($tags['quicktime']['timestamps_unix']['modify']['moov trak mdia mdhd'])) {
+			$time = $tags['quicktime']['timestamps_unix']['modify']['moov trak mdia mdhd']; // 1676208759
+			if ($time > -1) {
+				return $time;
+			}
+		} 
+		if (isset($tags['quicktime']['moov']['subatoms'])) {
 			foreach ($tags['quicktime']['moov']['subatoms'] as $subatom) {
 				if (isset($subatom['creation_time_unix'])) {
 					$time = $subatom['creation_time_unix']; // 1472851226
 				} else if (isset($subatom['modify_time_unix'])) {
 					$time = $subatom['modify_time_unix']; // 1472851226
 				}
-				if ($time) {
-					break;
+				if ($time > -1) {
+					return $time;
 				}
 			}
 		}
-		if (empty($time)) {
-			throw new \Exception('Time not found in '.print_r($tags, true));
-		}
-		return $time;
+		throw new \Exception('Time not found in '.print_r($tags, true));
 	}
 
 	public function parseDate($time) {
@@ -82,7 +129,9 @@ class Renamer {
 		if ($this->isAnalyzable($sourceFile)) {
 			/** @var File $node */
 			try {
+				$output->writeln("<info>trying metadata</info>");
 				$rawTime = $this->extractRawTimestampFromMetadata($sourceFile);
+				$output->writeln("<info>got $rawTime</info>");
 				// try parsing with datetime
 				$dateTime = $this->parseDate($rawTime);
 			} catch (\Exception $e) {
@@ -91,11 +140,12 @@ class Renamer {
 			}
 			
 			if ($dateTime === false) {
+				$output->writeln("<info>trying as whatsapp</info>");
 				// Whatsapp images: IMG-20220930-WA0014.jpg we replace the WE with 12 so the images get ordered roughly at 12h
-				$rawTime = preg_replace("/IMG-(\d{8})-WA(\d\d)(\d)(\d).*\.jpg/", "$1 $2:0$3:0$4", $sourceFile->getName());
+				$rawTime = preg_replace("/(IMG|VID)[-_](\d{8})[-_]WA(\d\d)(\d)(\d)( .\d.)?\.(jpg|mp4)/", "$2 $3:0$4:0$5", $sourceFile->getName());
 				if ($rawTime !== $sourceFile->getName()) {
 					if ($output) {
-						$output->writeln("<info>detected whatsapp image {$sourceFile->getName()}, trying to parse $rawTime as 'Ymd H:i:s'</info>");
+						$output->writeln("<info>detected whatsapp image/video {$sourceFile->getName()}, trying to parse $rawTime as 'Ymd H:i:s'</info>");
 					}
 					$dateTime = \DateTimeImmutable::createFromFormat('Ymd H:i:s', $rawTime);
 					if ($dateTime === false && $output) {
@@ -104,6 +154,7 @@ class Renamer {
 				}
 			}
 			if ($dateTime === false) {
+				$output->writeln("<info>trying unix timestamp</info>");
 				// unix timestamp, eg. 1652562090760.jpg
 				$rawTime = preg_replace("/(\d{10})(\d{3})\..*/", "$1.$2", $sourceFile->getName());
 				if ($rawTime !== $sourceFile->getName()) {
@@ -116,10 +167,10 @@ class Renamer {
 
 			if ($dateTime === false) {
 				// other crap
-				$rawTime = preg_replace("/.*IMG_(\d{8})_(\d{6}).*/", "$1 $2", $sourceFile->getName());
+				$rawTime = preg_replace("/.*(IMG|VID)[_-](\d{8})[_-](\d{6})( .\d.)?\..*/", "$2 $3", $sourceFile->getName());
 				if ($rawTime !== $sourceFile->getName()) {
 					if ($output) {
-						$output->writeln("<info>detected IMG filename {$sourceFile->getName()}, trying to parse $rawTime as 'Ymd His'</info>");
+						$output->writeln("<info>detected IMG/VID filename {$sourceFile->getName()}, trying to parse $rawTime as 'Ymd His'</info>");
 					}
 					$dateTime = \DateTimeImmutable::createFromFormat('Ymd His', $rawTime);
 				}
@@ -130,9 +181,9 @@ class Renamer {
 				$rawTime = preg_replace("/.*image-(\d{8})-(\d{6}).*/", "$1 $2", $sourceFile->getName());
 				if ($rawTime !== $sourceFile->getName()) {
 					if ($output) {
-						$output->writeln("<info>detected image filename {$sourceFile->getName()}, trying to parse $rawTime as 'Ydm His'</info>");
+						$output->writeln("<info>detected image filename {$sourceFile->getName()}, trying to parse $rawTime as 'Ymd His'</info>");
 					}
-					$dateTime = \DateTimeImmutable::createFromFormat('Ydm His', $rawTime);
+					$dateTime = \DateTimeImmutable::createFromFormat('Ymd His', $rawTime);
 				}
 			}
 

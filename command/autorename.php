@@ -65,6 +65,16 @@ class Autorename extends Command {
 	}
 
 
+
+
+	/**
+	 * Execute the command
+	 *
+	 * @param InputInterface $input
+	 * @param OutputInterface $output
+	 *
+	 * @return int  0 if everything went fine
+	 */
 	public function execute(InputInterface $input, OutputInterface $output) {
 
 		$userIds = $input->getArgument('userid');
@@ -92,8 +102,10 @@ class Autorename extends Command {
 				$this->renamer->autorenameFolder($sourceFolder, $targetFolder, $dryRun, $output);
 			} else {
 				$output->writeln("<error>Unknown user $userId</error>");
+				return 1;
 			}
 		}
+		return 0;
 	}
 
 }
